@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Web Terminal</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.min.css"
+    />
+    <link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='14' fill='%23c96342'/></svg>" />
+  </head>
+  <body class="app-body">
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="sidebar-top">
+          <div class="brand">
+            <div class="brand-mark" aria-hidden="true">
+              <svg viewBox="0 0 32 32" width="22" height="22">
+                <path d="M16 3.5c-1.6 4.2-3.7 6.4-7.9 7.9 4.2 1.6 6.4 3.7 7.9 7.9 1.6-4.2 3.7-6.4 7.9-7.9-4.2-1.6-6.4-3.7-7.9-7.9z" fill="currentColor"/>
+                <path d="M22.5 19c-.7 1.9-1.7 2.9-3.6 3.6 1.9.7 2.9 1.7 3.6 3.6.7-1.9 1.7-2.9 3.6-3.6-1.9-.7-2.9-1.7-3.6-3.6z" fill="currentColor" opacity=".7"/>
+              </svg>
+            </div>
+            <span class="brand-name">Web Terminal</span>
+          </div>
+
+          <div class="host-card">
+            <div class="host-row">
+              <span class="host-label">user</span>
+              <span class="host-value" id="host-user">{{ user }}</span>
+            </div>
+            <div class="host-row">
+              <span class="host-label">host</span>
+              <span class="host-value" id="host-name">{{ host }}</span>
+            </div>
+            <div class="host-row">
+              <span class="host-label">system</span>
+              <span class="host-value" id="host-system">&mdash;</span>
+            </div>
+            <div class="host-row">
+              <span class="host-label">uptime</span>
+              <span class="host-value" id="host-uptime">&mdash;</span>
+            </div>
+          </div>
+
+          <section class="metrics">
+            <h2 class="section-title">Resources</h2>
+
+            <div class="metric" id="metric-cpu">
+              <div class="metric-head">
+                <span class="metric-name">
+                  <svg viewBox="0 0 24 24" width="14" height="14" class="metric-icon" aria-hidden="true">
+                    <path d="M9 3v2H7a2 2 0 0 0-2 2v2H3v2h2v2H3v2h2v2a2 2 0 0 0 2 2h2v2h2v-2h2v2h2v-2h2a2 2 0 0 0 2-2v-2h2v-2h-2v-2h2V9h-2V7a2 2 0 0 0-2-2h-2V3h-2v2h-2V3h-2v2H9V3H9zm-2 4h10v10H7V7zm2 2v6h6V9H9z" fill="currentColor"/>
+                  </svg>
+                  CPU
+                </span>
+                <span class="metric-value"><span id="cpu-percent">0</span><span class="unit">%</span></span>
+              </div>
+              <div class="bar"><div class="bar-fill" id="cpu-bar"></div></div>
+              <div class="metric-meta">
+                <span id="cpu-count">— cores</span>
+                <span id="cpu-load">load —</span>
+              </div>
+            </div>
+
+            <div class="metric" id="metric-ram">
+              <div class="metric-head">
+                <span class="metric-name">
+                  <svg viewBox="0 0 24 24" width="14" height="14" class="metric-icon" aria-hidden="true">
+                    <path d="M3 8h18v8H3V8zm2 2v4h2v-4H5zm4 0v4h2v-4H9zm4 0v4h2v-4h-2zm4 0v4h2v-4h-2z" fill="currentColor"/>
+                  </svg>
+                  RAM
+                </span>
+                <span class="metric-value"><span id="ram-percent">0</span><span class="unit">%</span></span>
+              </div>
+              <div class="bar"><div class="bar-fill" id="ram-bar"></div></div>
+              <div class="metric-meta">
+                <span id="ram-used">— / —</span>
+                <span id="ram-free">free —</span>
+              </div>
+            </div>
+
+            <div class="metric" id="metric-gpu">
+              <div class="metric-head">
+                <span class="metric-name">
+                  <svg viewBox="0 0 24 24" width="14" height="14" class="metric-icon" aria-hidden="true">
+                    <path d="M3 6h18v12H3V6zm2 2v8h14V8H5zm2 1h6v6H7V9zm8 0h2v2h-2V9zm0 3h2v2h-2v-2z" fill="currentColor"/>
+                  </svg>
+                  GPU
+                </span>
+                <span class="metric-value" id="gpu-headline">none</span>
+              </div>
+              <div id="gpu-list" class="gpu-list"></div>
+            </div>
+          </section>
+        </div>
+
+        <div class="sidebar-bottom">
+          <div class="status-row">
+            <span class="status-dot" id="conn-dot"></span>
+            <span class="status-text" id="conn-text">connecting…</span>
+          </div>
+          <form action="{{ url_for('logout') }}" method="post" class="logout-form">
+            <button class="btn btn-ghost" type="submit">Sign out</button>
+          </form>
+        </div>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div class="topbar-left">
+            <span class="dot dot-red"></span>
+            <span class="dot dot-amber"></span>
+            <span class="dot dot-green"></span>
+            <span class="topbar-title" id="topbar-title">{{ user }}@{{ host }}</span>
+          </div>
+          <div class="topbar-right">
+            <button class="icon-btn" id="btn-clear" title="Clear (Ctrl+L)" aria-label="Clear terminal">
+              <svg viewBox="0 0 24 24" width="16" height="16"><path d="M5 6h14v2H5V6zm2 3h10l-1 11H8L7 9zm3-6h4v2h-4V3z" fill="currentColor"/></svg>
+            </button>
+          </div>
+        </header>
+
+        <div class="terminal-wrap">
+          <div id="terminal" class="terminal"></div>
+        </div>
+      </main>
+    </div>
+
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.min.js"></script>
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+  </body>
+</html>
